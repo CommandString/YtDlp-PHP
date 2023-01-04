@@ -1,0 +1,20 @@
+{
+    "name": "commandstring/yt-dlp",
+    "description": "A PHP wrapper for yt-dlp",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Yt\\Dlp\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "commandstring",
+            "email": "bmxmikey2@gmail.com"
+        }
+    ],
+    "require": {
+        "commandstring/utils": "^1.3"
+    }
+}
