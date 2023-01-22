@@ -35,8 +35,8 @@ $command->execute()->then(function (string $result) {
 # Already implemented commands
 
 ```php
-public function downloadVideo(string $url, string $outputPath, string $customName, string $format = "mp4"): PromiseInterface
-public function downloadAudio(string $url, string $outputPath, string $customName, string $format = "mp3"): PromiseInterface
+public function downloadVideo(string $url, string $outputPath, string $customName, string $format = "mp4"): PromiseInterface;
+public function downloadAudio(string $url, string $outputPath, string $customName, string $format = "mp3"): PromiseInterface;
 ```
 returns the full path of where the audio/video was downloaded
 
