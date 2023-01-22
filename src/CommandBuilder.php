@@ -2,15 +2,12 @@
 
 namespace Yt\Dlp;
 
-use Exception;
+use React\Promise\PromiseInterface;
 
 class CommandBuilder {
     private array $options = [];
 
-    public function __construct(private string $url = "", private string $prefix, private ?YtDlp $ytDlp = null)
-    {
-        
-    }
+    public function __construct(private string $url = "", private YtDlp $ytDlp) {}
 
     public function addOption(Options|string $option, string ...$arguments): self
     {
@@ -27,7 +24,7 @@ class CommandBuilder {
     
     public function buildCommand(): string
     {
-        $command = $this->prefix." {$this->url}";
+        $command = $this->url;
 
         foreach ($this->options as $option) {
             $command .= " $option";
@@ -42,25 +39,10 @@ class CommandBuilder {
     }
 
     /**
-     * @throws Exception If \Yt\Dlp\YtDlp is not supplied
-     * @throws \Yt\Dlp\Exceptions\CommandExecutionFailed If the command fails to execute
-     * @return CommandResult
+     * @return PromiseInterface
      */
-    public function execute(): CommandResult
+    public function execute(): PromiseInterface
     {
-        if (!isset($this->ytDlp)) {
-            throw new Exception("\\Yt\\Dlp\\YtDlp must be supplied in the constructor to execute commands.");
-        }
-
         return $this->ytDlp->execute((string)$this);
-    }
-
-    public function proc_execute(): array
-    {
-        if (!isset($this->ytDlp)) {
-            throw new Exception("\\Yt\\Dlp\\YtDlp must be supplied in the constructor to execute commands.");
-        }
-
-        return $this->ytDlp->proc_execute((string)$this);
     }
 }
