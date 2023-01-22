@@ -5,9 +5,9 @@ namespace Yt\Dlp\Exceptions;
 use Yt\Dlp\CommandResult;
 
 class CommandExecutionFailed extends \Exception {
-    public function __construct(private string $command, private CommandResult $result)
+    public function __construct(private string $command, private string $result, private int $exit_code)
     {
-        parent::__construct("Command $command failed to execute", $result->exit_code);
+        parent::__construct("Command $command failed to execute", $exit_code);
     }
 
     public function __toString(): string
@@ -20,7 +20,7 @@ class CommandExecutionFailed extends \Exception {
         return $this->command;
     }
 
-    public function getCommandResult(): CommandResult
+    public function getCommandResult(): string
     {
         return $this->result;
     }
