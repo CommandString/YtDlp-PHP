@@ -2,17 +2,15 @@
 
 namespace Yt\Dlp\Exceptions;
 
-use Yt\Dlp\CommandResult;
-
 class CommandExecutionFailed extends \Exception {
-    public function __construct(private string $command, private string $result, private int $exit_code)
+    public function __construct(private string $command, private string $result)
     {
-        parent::__construct("Command $command failed to execute", $exit_code);
+        parent::__construct("Command $command failed to execute");
     }
 
     public function __toString(): string
     {
-        return __CLASS__ . ": [{$this->code}]: {$this->message}\n";
+        return "{$this->getMessage()}\n\n{$this->getCommandResult()}";
     }
 
     public function getCommand(): string
