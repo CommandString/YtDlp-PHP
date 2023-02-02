@@ -67,7 +67,7 @@ class YtDlp {
 
         Loop::addPeriodicTimer(Timer::MIN_INTERVAL, function (Timer $timer) use (&$proc, $command, $promise, &$stderr, &$stdout) {
             $status = proc_get_status($proc["process"]);
-
+            
             if ($status["running"]) {
                 return;
             }
@@ -77,7 +77,7 @@ class YtDlp {
             @unlink($proc["files"][0]);
             @unlink($proc["files"][1]);
 
-            if (strlen($stderr)) {
+            if ($status["exitcode"] !== 0) {
                 $promise->reject(new CommandExecutionFailed($command, $stderr));
             } else {
                 $promise->resolve($stdout);
