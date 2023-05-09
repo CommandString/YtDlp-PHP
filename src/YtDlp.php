@@ -44,7 +44,7 @@ class YtDlp
      */
     public function newCommand(string $url = ""): CommandBuilder
     {
-        return new CommandBuilder($url, $this);
+        return new CommandBuilder($this, $url);
     }
 
     /**
