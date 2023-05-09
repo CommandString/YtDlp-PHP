@@ -39,10 +39,10 @@ class YtDlp
     }
 
     /**
-     * @param ?string $url
+     * @param string $url
      * @return CommandBuilder
      */
-    public function newCommand(?string $url = null): CommandBuilder
+    public function newCommand(string $url = ""): CommandBuilder
     {
         return new CommandBuilder($url, $this);
     }
