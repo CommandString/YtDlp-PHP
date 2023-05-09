@@ -4,10 +4,13 @@ namespace Yt\Dlp;
 
 use React\Promise\PromiseInterface;
 
-class CommandBuilder {
+class CommandBuilder
+{
     private array $options = [];
 
-    public function __construct(private string $url = "", private YtDlp $ytDlp) {}
+    public function __construct(private ?string $url = null, private YtDlp $ytDlp)
+    {
+    }
 
     public function addOption(Options|string $option, string ...$arguments): self
     {
@@ -21,18 +24,15 @@ class CommandBuilder {
 
         return $this;
     }
-    
+
     public function buildCommand(): string
     {
-        $command = $this->url;
-
-        foreach ($this->options as $option) {
-            $command .= " $option";
-        }
+        $options = implode(" ", $this->options);
+        $command = (is_null($this->url)) ? $options : "{$this->url} {$options}";
 
         return $command;
     }
-    
+
     public function __toString()
     {
         return $this->buildCommand();

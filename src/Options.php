@@ -46,7 +46,7 @@ enum Options: string
     case _4 = "--force-ipv4";
     case _6 = "--force-ipv6";
     case ENABLE_FILE_URLS = "--enable-file-urls";
-    
+
     ###################
     #   GEO OPTIONS   #
     ###################
@@ -55,7 +55,7 @@ enum Options: string
     case NO_GEO_BYPASS = "--no-geo-bypass";
     case GEO_BYPASS_COUNTRY = "--geo-bypass-country %s";
     case GEO_BYPASS_IP_BLOCK = "--geo-bypass-ip-block %s";
-    
+
     #######################
     #   VIDEO SELECTION   #
     #######################
@@ -106,7 +106,7 @@ enum Options: string
     case DOWNLOAD_SECTIONS = "--download-sections %s";
     case DOWNLOADER = "--downloader %s";
     case DOWNLOADER_ARGS = "--downloader-args %s";
-    
+
     ##########################
     #   FILESYSTEM OPTIONS   #
     ##########################
@@ -187,7 +187,7 @@ enum Options: string
     case DUMP_PAGES = "--dump-pages";
     case WRITE_PAGES = "--write-pages";
     case PRINT_TRAFFIC = "--print-traffic";
-    
+
     ###################
     #   WORKAROUNDS   #
     ###################
@@ -201,7 +201,7 @@ enum Options: string
     case SLEEP_INTERVAL = "--sleep-interval %s";
     case MAX_SLEEP_INTERVAL = "--max-sleep-interval %s";
     case SLEEP_SUBTITLES = "--sleep-subtitles %s";
-    
+
     ############################
     #   VIDEO FORMAT OPTIONS   #
     ############################
@@ -219,7 +219,7 @@ enum Options: string
     case CHECK_ALL_FORMATS = "--check-all-formats";
     case NO_CHECK_FORMATS = "--no-check-formats";
     case MERGE_OUTPUT_FORMAT = "--merge-output-format %s";
-    
+
     #########################
     #   SUBTITLES OPTIONS   #
     #########################
@@ -230,7 +230,7 @@ enum Options: string
     case LIST_SUBS = "--list-subs";
     case SUB_FORMAT = "--sub-format %s";
     case SUB_LANGS = "--sub-langs %s";
-    
+
     ##############################
     #   AUTHENTICATION OPTIONS   #
     ##############################
@@ -287,10 +287,10 @@ enum Options: string
     case FORCE_KEYFRAMES_AT_CUTS = "--force-keyframes-at-cuts";
     case NO_FORCE_KEYFRAMES_AT_CUTS = "--no-force-keyframes-at-cuts";
     case USE_POSTPROCESSOR = "--use-postprocessor = %s";
-    
-    ############################
-    #   SPONSORBLOCK OPTIONS   #
-    ############################
+
+    #############################
+    #   SPONSOR-BLOCK OPTIONS   #
+    #############################
     case SPONSORBLOCK_MARK = "--sponsorblock-mark %s";
     case SPONSORBLOCK_REMOVE = "--sponsor-remove %s";
     case SPONSORBLOCK_CHAPTER_TITLE = "--sponserblock-chapter-title %s";

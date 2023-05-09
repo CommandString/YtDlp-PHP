@@ -4,13 +4,22 @@ namespace Yt\Dlp;
 
 use React\EventLoop\Loop;
 use React\EventLoop\Timer\Timer;
+use React\EventLoop\TimerInterface;
 use React\Promise\Deferred;
+use React\Promise\Promise;
 use React\Promise\PromiseInterface;
 use Yt\Dlp\Exceptions\CommandExecutionFailed;
 use Yt\Dlp\Exceptions\YtDlpNotInstalled;
+use InvalidArgumentException;
 
-class YtDlp {
+class YtDlp
+{
+    /**
+     * @var string
+     */
     private string $prefix = "yt-dlp";
+
+    private const TEMP = __DIR__ . '/temp';
 
     /**
      * @param string|null $ytDlpPath
@@ -18,7 +27,7 @@ class YtDlp {
      */
     public function __construct(?string $ytDlpPath = null)
     {
-        if (!is_null($ytDlpPath)) {
+        if ($ytDlpPath !== null) {
             $this->prefix = realpath($ytDlpPath);
         }
 
@@ -30,10 +39,10 @@ class YtDlp {
     }
 
     /**
-     * @param string $url
+     * @param ?string $url
      * @return CommandBuilder
      */
-    public function newCommand(string $url = ""): CommandBuilder
+    public function newCommand(?string $url = null): CommandBuilder
     {
         return new CommandBuilder($url, $this);
     }
@@ -42,11 +51,18 @@ class YtDlp {
      * @param string $command
      * @return array
      */
-    private function proc_execute(string $command): array
+    private function procExecute(string $command): array
     {
-        $stdout = tempnam(__DIR__, "yt");
-        $stderr = tempnam(__DIR__, "yt");
-        $process = proc_open("$this->prefix $command", [1 => ["file", $stdout, "w"], 2 => ["file", $stderr, "w"]], $pipes);
+        $stdout = tempnam(self::TEMP, "yt");
+        $stderr = tempnam(self::TEMP, "yt");
+        $process = proc_open(
+            "$this->prefix {$command}",
+            [
+                1 => ["file", $stdout, "w"],
+                2 => ["file", $stderr, "w"]
+            ],
+            $pipes
+        );
 
         return [
             "files" => [$stdout, $stderr],
@@ -61,32 +77,33 @@ class YtDlp {
      */
     public function execute(string $command): PromiseInterface
     {
-        $promise = new Deferred();
+        return new Promise(function ($resolve, $reject) use ($command) {
+            $proc = $this->procExecute($command);
 
-        $proc = $this->proc_execute($command);
+            Loop::addPeriodicTimer(
+                Timer::MIN_INTERVAL,
+                static function (TimerInterface $timer) use (&$proc, &$stdout, &$stderr, $reject, $command, $resolve) {
+                    $status = proc_get_status($proc["process"]);
 
-        Loop::addPeriodicTimer(Timer::MIN_INTERVAL, function (Timer $timer) use (&$proc, $command, $promise, &$stderr, &$stdout) {
-            $status = proc_get_status($proc["process"]);
-            
-            if ($status["running"]) {
-                return;
-            }
+                    if ($status["running"]) {
+                        return;
+                    }
 
-            $stdout = @file_get_contents($proc["files"][0]);
-            $stderr = @file_get_contents($proc["files"][1]);
-            @unlink($proc["files"][0]);
-            @unlink($proc["files"][1]);
+                    $stdout = file_get_contents($proc["files"][0]);
+                    $stderr = file_get_contents($proc["files"][1]);
+                    unlink($proc["files"][0]);
+                    unlink($proc["files"][1]);
 
-            if ($status["exitcode"] !== 0) {
-                $promise->reject(new CommandExecutionFailed($command, $stderr));
-            } else {
-                $promise->resolve($stdout);
-            }
+                    if ($status["exitcode"] !== 0) {
+                        $reject(new CommandExecutionFailed($command, $stderr));
+                    } else {
+                        $resolve($stdout);
+                    }
 
-            Loop::cancelTimer($timer);
+                    Loop::cancelTimer($timer);
+                }
+            );
         });
-
-        return $promise->promise();
     }
 
     /**
@@ -94,30 +111,37 @@ class YtDlp {
      * @param string $outputPath
      * @param string $customName
      * @param string $format
-     * @throws \InvalidArgumentException
      * @return PromiseInterface
      */
-    public function downloadAudio(string $url, string $outputPath, string $customName, string $format = "mp3"): PromiseInterface
-    {
-        $promise = new Deferred();
+    public function downloadAudio(
+        string $url,
+        string $outputPath,
+        string $customName,
+        string $format = "mp3"
+    ): PromiseInterface {
+        return new Promise(function ($resolve, $reject) use ($outputPath, $customName, $format, $url) {
+            $path = realpath($outputPath);
 
-        $path = realpath($outputPath);
+            if ($path === false) {
+                throw new InvalidArgumentException("{$outputPath} does not exist!");
+            }
 
-        if (!$path) {
-            throw new \InvalidArgumentException("$outputPath does not exist!");
-        }
+            $output = $path;
 
-        $output = "$path";
+            $output .= "/{$customName}.{$format}";
 
-        $output .= "/$customName.$format";
-
-        $this->newCommand('"'.$url.'"')->addOption(Options::OUTPUT, '"'.$output.'"')->addOption(Options::EXTRACT_AUDIO)->addOption(Options::AUDIO_FORMAT, $format)->execute()->then(function () use ($promise, $output) {
-            $promise->resolve(realpath($output));
-        }, function ($err) use ($promise) {
-            $promise->reject($err);
+            $this
+                ->newCommand('"' . $url . '"')
+                ->addOption(Options::OUTPUT, '"' . $output . '"')
+                ->addOption(Options::EXTRACT_AUDIO)
+                ->addOption(Options::AUDIO_FORMAT, $format)
+                ->execute()
+                ->then(static function () use ($resolve, $output) {
+                    $resolve(realpath($output));
+                }, static function ($err) use ($reject) {
+                    $reject($err);
+                });
         });
-
-        return $promise->promise();
     }
 
     /**
@@ -125,28 +149,35 @@ class YtDlp {
      * @param string $outputPath
      * @param string $customName
      * @param string $format
-     * @throws \InvalidArgumentException
      * @return PromiseInterface
      */
-    public function downloadVideo(string $url, string $outputPath, string $customName, string $format = "mp4"): PromiseInterface
-    {
+    public function downloadVideo(
+        string $url,
+        string $outputPath,
+        string $customName,
+        string $format = "mp4"
+    ): PromiseInterface {
         $promise = new Deferred();
 
         $path = realpath($outputPath);
 
         if (!$path) {
-            throw new \InvalidArgumentException("$outputPath does not exist!");
+            throw new \InvalidArgumentException("{$outputPath} does not exist!");
         }
 
-        $output = "$path";
+        $output = $path;
 
-        $output .= "/$customName.$format";
+        $output .= "/{$customName}.{$format}";
 
-        $this->newCommand('"'.$url.'"')->addOption(Options::OUTPUT, '"'.$output.'"')->addOption(Options::REMUX_VIDEO, $format)->execute()->then(function () use ($promise, $output) {
-            $promise->resolve(realpath($output));
-        }, function ($err) use ($promise) {
-            $promise->reject($err);
-        });
+        $this->newCommand('"' . $url . '"')
+            ->addOption(Options::OUTPUT, '"' . $output . '"')
+            ->addOption(Options::REMUX_VIDEO, $format)
+            ->execute()
+            ->then(static function () use ($promise, $output) {
+                $promise->resolve(realpath($output));
+            }, static function ($err) use ($promise) {
+                $promise->reject($err);
+            });
 
         return $promise->promise();
     }
@@ -154,17 +185,19 @@ class YtDlp {
     /**
      * @param string $url
      * @return PromiseInterface
-     * @see https://github.com/yt-dlp/yt-dlp#output-template
      */
     public function getInfo(string $url): PromiseInterface
     {
-        $promise = new Deferred;
+        $promise = new Deferred();
 
-        $command = $this->newCommand('"'.$url.'"')->addOption(Options::SKIP_DOWNLOAD)->addOption(Options::DUMP_JSON);
+        $command = $this
+            ->newCommand('"' . $url . '"')
+            ->addOption(Options::SKIP_DOWNLOAD)
+            ->addOption(Options::DUMP_JSON);
 
-        $this->execute($command)->then(function ($json_string) use ($promise) {
+        $this->execute($command)->then(static function ($json_string) use ($promise) {
             $promise->resolve(json_decode($json_string));
-        }, function ($err) use ($promise) {
+        }, static function ($err) use ($promise) {
             $promise->reject($err);
         });
 
@@ -174,25 +207,25 @@ class YtDlp {
     /**
      * @param string $query
      * @param int $results
-     * @throws \InvalidArgumentException
      * @return PromiseInterface
      */
     public function search(string $query, int $results = 1): PromiseInterface
     {
-        $promise = new Deferred;
+        return new Promise(function ($resolve, $reject) use ($results, $query) {
+            if ($results < 1) {
+                throw new InvalidArgumentException("Results must be at least 1");
+            }
 
-        if ($results < 1) {
-            throw new \InvalidArgumentException("Results must be at least 1");
-        }
+            $command = $this->newCommand('"' . $query . '"')
+                ->addOption(Options::SKIP_DOWNLOAD)
+                ->addOption(Options::DUMP_JSON)
+                ->addOption(Options::DEFAULT_SEARCH, "ytsearch{$results}");
 
-        $command = $this->newCommand('"'.$query.'"')->addOption(Options::SKIP_DOWNLOAD)->addOption(Options::DUMP_JSON)->addOption(Options::DEFAULT_SEARCH, "ytsearch$results");
-
-        $this->execute($command)->then(function ($out) use ($promise) {
-            $promise->resolve(json_decode("[".substr(implode(",", explode("\n", $out)), 0, -1)."]"));
-        }, function ($err) use ($promise) {
-            $promise->reject($err);
+            $this->execute($command)->then(static function ($out) use ($resolve) {
+                $resolve(json_decode("[" . substr(implode(",", explode("\n", $out)), 0, -1) . "]"));
+            }, static function ($err) use ($reject) {
+                $reject($err);
+            });
         });
-
-        return $promise->promise();
     }
 }
