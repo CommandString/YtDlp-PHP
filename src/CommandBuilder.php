@@ -8,7 +8,7 @@ class CommandBuilder
 {
     private array $options = [];
 
-    public function __construct(private ?string $url = null, private YtDlp $ytDlp)
+    public function __construct(private YtDlp $ytDlp, private readonly string $url = "")
     {
     }
 
@@ -28,9 +28,7 @@ class CommandBuilder
     public function buildCommand(): string
     {
         $options = implode(" ", $this->options);
-        $command = (is_null($this->url)) ? $options : "{$this->url} {$options}";
-
-        return $command;
+        return trim("{$this->url} {$options}");
     }
 
     public function __toString()
