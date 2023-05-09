@@ -2,7 +2,8 @@
 
 namespace Yt\Dlp\Exceptions;
 
-class CommandExecutionFailed extends \Exception {
+class CommandExecutionFailed extends \Exception
+{
     public function __construct(private string $command, private string $result)
     {
         parent::__construct("Command $command failed to execute");
