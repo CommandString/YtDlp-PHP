@@ -122,8 +122,7 @@ class YtDlp
         string $outputPath,
         string $customName,
         string $format = "mp3"
-    ): PromiseInterface
-    {
+    ): PromiseInterface {
         return new Promise(function ($resolve, $reject) use ($outputPath, $customName, $format, $url) {
             $path = realpath($outputPath);
 
@@ -161,8 +160,7 @@ class YtDlp
         string $outputPath,
         string $customName,
         string $format = "mp4"
-    ): PromiseInterface
-    {
+    ): PromiseInterface {
         $promise = new Deferred();
 
         $path = realpath($outputPath);
