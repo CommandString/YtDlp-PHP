@@ -18,9 +18,17 @@ class Result
                     'requested_formats' => RequestedFormat::class
                 };
 
+                $groupedClass = match ($key) {
+                    'formats' => Formats::class,
+                    'thumbnails' => Thumbnails::class,
+                    'requested_formats' => RequestedFormats::class
+                };
+
                 foreach ($value as &$v) {
                     $v = new $class($v);
                 }
+
+                $value = new $groupedClass($value);
             }
 
             $this->{$key} = $value;
