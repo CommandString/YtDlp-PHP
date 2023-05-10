@@ -7,6 +7,8 @@ class Result
     public function __construct(array $data)
     {
         foreach ($data as $key => $value) {
+            $key = trim($key, '_');
+
             if (!property_exists(self::class, $key)) {
                 continue;
             }
@@ -37,16 +39,8 @@ class Result
 
     public ?string $id;
     public ?string $title;
-
-    /**
-     * @var Format[]
-     */
-    public ?array $formats;
-
-    /**
-     * @var Thumbnail[]
-     */
-    public ?array $thumbnails;
+    public ?Formats $formats;
+    public ?Thumbnails $thumbnails;
     public ?string $thumbnail;
     public ?string $description;
     public ?string $uploader;
@@ -64,7 +58,7 @@ class Result
     public ?bool $playable_in_embed;
     public ?string $live_status;
     public ?string $release_timestamp;
-    public ?array $_format_sort_fields;
+    public ?array $format_sort_fields;
     public ?array $automatic_captions;
     public ?array $subtitles;
     public ?string $comment_count;
@@ -87,7 +81,7 @@ class Result
     public ?string $playlist_uploader_id;
     public ?int $n_entries;
     public ?int $playlist_index;
-    public ?int $__last_playlist_index;
+    public ?int $last_playlist_index;
     public ?int $playlist_autonumber;
     public ?string $display_id;
     public ?string $fulltitle;
@@ -95,8 +89,8 @@ class Result
     public ?bool $is_live;
     public ?bool $was_live;
     public ?array $requested_subtitles;
-    public ?string $_has_drm;
-    public ?array $requested_formats;
+    public ?string $has_drm;
+    public ?RequestedFormats $requested_formats;
     public ?string $format;
     public ?string $format_id;
     public ?string $ext;
@@ -119,9 +113,8 @@ class Result
     public ?int $asr;
     public ?int $audio_channels;
     public ?int $epoch;
-    public ?string $_filename;
     public ?string $filename;
     public ?string $urls;
-    public ?string $_type;
-    public ?array $_version;
+    public ?string $type;
+    public ?array $version;
 }
