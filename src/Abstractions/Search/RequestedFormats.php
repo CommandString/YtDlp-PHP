@@ -2,7 +2,9 @@
 
 namespace Yt\Dlp\Abstractions\Search;
 
-class RequestedFormats extends \Yt\Dlp\Abstractions\AbstractIterable
+use Yt\Dlp\Abstractions\AbstractCollection;
+
+class RequestedFormats extends AbstractCollection
 {
     protected static string $itemClass = RequestedFormat::class;
 

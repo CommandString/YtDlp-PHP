@@ -2,9 +2,9 @@
 
 namespace Yt\Dlp\Abstractions\Search;
 
-use Yt\Dlp\Abstractions\AbstractIterable;
+use Yt\Dlp\Abstractions\AbstractCollection;
 
-class Thumbnails extends AbstractIterable
+class Thumbnails extends AbstractCollection
 {
     protected static string $itemClass = Thumbnail::class;
 
