@@ -6,8 +6,10 @@ use RuntimeException;
 use Yt\Dlp\Abstractions\Search\Result;
 use InvalidArgumentException;
 use Iterator;
+use ArrayAccess;
+use Countable;
 
-abstract class AbstractIterable implements Iterator
+abstract class AbstractCollection implements Iterator, ArrayAccess, Countable
 {
     protected int $position = 0;
     protected array $items;
@@ -55,5 +57,34 @@ abstract class AbstractIterable implements Iterator
     public function rewind(): void
     {
         $this->position = 0;
+    }
+
+    public function offsetExists($offset): bool
+    {
+        return isset($this->items[$offset]);
+    }
+
+    public function offsetGet($offset): Result
+    {
+        return $this->items[$offset];
+    }
+
+    public function offsetSet($offset, $value): void
+    {
+        if (!$value instanceof static::$itemClass) {
+            throw new InvalidArgumentException("Item must be instance of " . static::$itemClass);
+        }
+
+        $this->items[$offset ?? count($this)] = $value;
+    }
+
+    public function offsetUnset($offset): void
+    {
+        unset($this->items[$offset]);
+    }
+
+    public function count(): int
+    {
+        return count($this->items);
     }
 }
