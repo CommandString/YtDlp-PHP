@@ -15,10 +15,10 @@ class Thumbnail
         }
     }
 
-    public string $url;
-    public int $preference;
-    public string $id;
-    public int $height;
-    public int $width;
-    public string $resolution;
+    public ?string $url;
+    public ?int $preference;
+    public ?string $id;
+    public ?int $height;
+    public ?int $width;
+    public ?string $resolution;
 }
