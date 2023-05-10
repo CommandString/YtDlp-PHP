@@ -15,6 +15,6 @@ class Fragment
         }
     }
 
-    public string $url;
-    public int $duration;
+    public ?string $url;
+    public ?int $duration;
 }
