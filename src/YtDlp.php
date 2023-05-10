@@ -8,9 +8,14 @@ use React\EventLoop\TimerInterface;
 use React\Promise\Deferred;
 use React\Promise\Promise;
 use React\Promise\PromiseInterface;
+use Yt\Dlp\Abstractions\Search\Result;
+use Yt\Dlp\Abstractions\Search\Results;
 use Yt\Dlp\Exceptions\CommandExecutionFailed;
 use Yt\Dlp\Exceptions\YtDlpNotInstalled;
 use InvalidArgumentException;
+use Throwable;
+
+use function React\Async\await;
 
 class YtDlp
 {
@@ -23,7 +28,7 @@ class YtDlp
 
     /**
      * @param string|null $ytDlpPath
-     * @throws YtDlpNotInstalled
+     * @throws YtDlpNotInstalled|Throwable
      */
     public function __construct(?string $ytDlpPath = null)
     {
@@ -32,7 +37,7 @@ class YtDlp
         }
 
         try {
-            $this->newCommand()->addOption(Options::VERSION)->execute();
+            await($this->newCommand()->addOption(Options::VERSION)->execute());
         } catch (CommandExecutionFailed $e) {
             throw new YtDlpNotInstalled($e);
         }
@@ -79,7 +84,6 @@ class YtDlp
     {
         return new Promise(function ($resolve, $reject) use ($command) {
             $proc = $this->procExecute($command);
-
             Loop::addPeriodicTimer(
                 Timer::MIN_INTERVAL,
                 static function (TimerInterface $timer) use (&$proc, &$stdout, &$stderr, $reject, $command, $resolve) {
@@ -118,7 +122,8 @@ class YtDlp
         string $outputPath,
         string $customName,
         string $format = "mp3"
-    ): PromiseInterface {
+    ): PromiseInterface
+    {
         return new Promise(function ($resolve, $reject) use ($outputPath, $customName, $format, $url) {
             $path = realpath($outputPath);
 
@@ -156,7 +161,8 @@ class YtDlp
         string $outputPath,
         string $customName,
         string $format = "mp4"
-    ): PromiseInterface {
+    ): PromiseInterface
+    {
         $promise = new Deferred();
 
         $path = realpath($outputPath);
@@ -211,18 +217,24 @@ class YtDlp
      */
     public function search(string $query, int $results = 1): PromiseInterface
     {
-        return new Promise(function ($resolve, $reject) use ($results, $query) {
-            if ($results < 1) {
-                throw new InvalidArgumentException("Results must be at least 1");
-            }
+        if ($results < 1) {
+            throw new InvalidArgumentException("Results must be at least 1");
+        }
 
+        return new Promise(function ($resolve, $reject) use ($query, $results) {
             $command = $this->newCommand('"' . $query . '"')
                 ->addOption(Options::SKIP_DOWNLOAD)
                 ->addOption(Options::DUMP_JSON)
                 ->addOption(Options::DEFAULT_SEARCH, "ytsearch{$results}");
 
-            $this->execute($command)->then(static function ($out) use ($resolve) {
-                $resolve(json_decode("[" . substr(implode(",", explode("\n", $out)), 0, -1) . "]"));
+            $this->execute($command)->then(static function ($out) use ($resolve, $reject) {
+                $lines = array_filter(explode("\n", $out), static fn($line) => !empty($line));
+
+                $results = new Results(
+                    array_map(static fn($result) => new Result(json_decode($result, true)), $lines)
+                );
+
+                $resolve($results);
             }, static function ($err) use ($reject) {
                 $reject($err);
             });
