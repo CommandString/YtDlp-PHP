@@ -58,8 +58,10 @@ class YtDlp
      */
     private function procExecute(string $command): array
     {
-        $stdout = tempnam(self::TEMP, "yt");
-        $stderr = tempnam(self::TEMP, "yt");
+        $randomName = static fn () => __DIR__ . '/yt-' . substr(md5(rand()), 0, 5) . '.txt';
+
+        $stdout = $randomName();
+        $stderr = $randomName();
         $process = proc_open(
             "$this->prefix {$command}",
             [
