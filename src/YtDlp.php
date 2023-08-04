@@ -95,8 +95,8 @@ class YtDlp
                         return;
                     }
 
-                    $stdout = file_get_contents($proc["files"][0]);
-                    $stderr = file_get_contents($proc["files"][1]);
+                    $stdout = @file_get_contents($proc["files"][0]);
+                    $stderr = @file_get_contents($proc["files"][1]);
                     unlink($proc["files"][0]);
                     unlink($proc["files"][1]);
 
